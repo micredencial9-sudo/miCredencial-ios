@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <title>Sindicato de la Carne - Credencial Digital</title>
+    <!-- iOS / PWA Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="Sindicato Carne"/>
+    <link rel="apple-touch-icon" href="logo.png"/>
+    <link rel="manifest" href="manifest.json"/>
+    
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"/>
+    
+    <style>
+        :root {
+            --bg-dark: #0D1B2A;
+            --wav-blue: #1565C0;
+            --golden-btn: #FFC107;
+            --field-bg: #F5F5F5;
+            --hint-color: #9E9E9E;
+            --text-white: #FFFFFF;
+            --text-dark: #212121;
+            --font-main: 'Hanken Grotesk', sans-serif;
+            --font-title: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Views management */
+        .view {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .view.active {
+            display: flex;
+            opacity: 1;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Restrictions and Guides */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .overlay-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(21, 101, 192, 0.2);
+            border: 2px solid var(--wav-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            animation: pulse 2s infinite;
+        }
+
+        .icon-badge span {
+            font-size: 40px;
+            color: var(--wav-blue);
+        }
+
+        /* Login Screen wave and elements */
+        .wave-container {
+            height: 280px;
+            width: 100%;
+            position: relative;
+            overflow: visible;
+        }
+
+        .wave-svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--wav-blue);
+        }
+
+        .logo-circle {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .login-content {
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .title-h1 {
+            font-family: var(--font-title);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-group span {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #616161;
+            font-size: 22px;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 54px;
+            background-color: var(--field-bg);
+            border: 2px solid transparent;
+            border-radius: 27px;
+            padding: 0 20px 0 54px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+            font-family: var(--font-main);
+        }
+
+        .input-field:focus {
+            border-color: var(--wav-blue);
+        }
+
+        .input-field::placeholder {
+            color: var(--hint-color);
+            font-weight: 400;
+        }
+
+        .btn-gold {
+            width: 100%;
+            height: 54px;
+            background-color: var(--golden-btn);
+            border: none;
+            border-radius: 27px;
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+            cursor: pointer;
+            outline: none;
+            font-family: var(--font-main);
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-gold:active {
+            opacity: 0.8;
+        }
+
+        .support-text {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.6;
+            margin-top: 16px;
+        }
+
+        /* Dashboard Styles */
+        .app-bar {
+            height: 64px;
+            background-color: rgba(21, 101, 192, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .app-bar-title {
+            font-family: var(--font-title);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .app-bar-action {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .dashboard-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        /* Welcome card */
+        .welcome-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .avatar-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(21, 101, 192, 0.2);
+            border: 1px solid rgba(21, 101, 192, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--wav-blue);
+        }
+
+        .avatar-circle span {
+            font-size: 32px;
+        }
+
+        .user-details h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .user-details p {
+            font-size: 13px;
+            color: #B0BEC5;
+            line-height: 1.4;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        /* Menu Card Items */
+        .menu-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+        }
+
+        .menu-card:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-card-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-card-icon span {
+            font-size: 28px;
+        }
+
+        .menu-card-info h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .menu-card-info p {
+            font-size: 13px;
+            color: #90A4AE;
+        }
+
+        /* Subviews for WebView */
+        .webview-header {
+            height: 64px;
+            background: rgba(13, 27, 42, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .back-btn span {
+            font-size: 24px;
+        }
+
+        .webview-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: white;
+        }
+
+        .webview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(21, 101, 192, 0.2);
+            border-top-color: var(--wav-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* SnackBar */
+        .snackbar {
+            position: fixed;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            background-color: #D32F2F;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .snackbar.show {
+            transform: translateY(0);
+        }
+
+        /* Standalone guide instruction box */
+        .guide-arrow {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            width: calc(100% - 32px);
+            max-width: 360px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #1A1A1A;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            animation: bounce 2s infinite;
+        }
+
+        .guide-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.95) transparent transparent;
+            display: block;
+            width: 0;
+        }
+
+        .guide-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .guide-step span.icon {
+            font-size: 24px;
+            color: var(--wav-blue);
+        }
+
+        /* Config / Support modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            color: #1E293B;
+            width: 100%;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-family: var(--font-title);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #64748B;
+            cursor: pointer;
+        }
+
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            background: #F1F5F9;
+        }
+
+        .contact-item span.icon {
+            color: var(--wav-blue);
+            font-size: 24px;
+        }
+
+        .contact-details h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1E293B;
+        }
+
+        .contact-details p {
+            font-size: 13px;
+            color: #64748B;
+        }
+
+        /* Confirmation dialog */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .dialog-overlay.open {
+            display: flex;
+        }
+
+        .dialog-card {
+            background-color: white;
+            color: #1E293B;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .dialog-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .dialog-card p {
+            font-size: 14px;
+            color: #64748B;
+            margin-bottom: 20px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .dialog-btn {
+            flex: 1;
+            height: 44px;
+            border-radius: 22px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .dialog-btn.cancel {
+            background-color: #E2E8F0;
+            color: #475569;
+        }
+
+        .dialog-btn.confirm {
+            background-color: #EF4444;
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 100%, 20% {}, 50%, 80% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -12px); }
+            60% { transform: translate(-50%, -6px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- OS RESTRICTION SCREEN -->
+    <div id="os-restrict-screen" class="fullscreen-overlay" style="display:none;">
+        <div class="overlay-card">
+            <div class="icon-badge" style="margin: 0 auto 24px;">
+                <span class="material-symbols-outlined">devices_off</span>
+            </div>
+            <h2 class="title-h1" style="font-size: 24px; margin-bottom: 12px;">Dispositivo no compatible</h2>
+            <p style="color: #B0BEC5; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                Esta versión web está diseñada exclusivamente para dispositivos Apple (iPhone o iPad).
+            </p>
+            <p style="color: #90A4AE; font-size: 13px; line-height: 1.5;">
+                Si utiliza un dispositivo Android, por favor descargue y ejecute la aplicación nativa correspondiente.
+            </p>
+        </div>
+    </div>
+
+    <!-- PWA INSTALL GUIDE (SAFARI ONLY) -->
+    <div id="pwa-guide-screen" class="fullscreen-overlay" style="display:none;">
+        <img src="logo.png" alt="Sindicato" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3);"/>
+        <h2 class="title-h1" style="font-size: 22px; margin-bottom: 12px;">Instalar Credencial Digital</h2>
+        <p style="color: #B0BEC5; font-size: 14px; margin-bottom: 32px; max-width: 320px; line-height: 1.5;">
+            Para acceder a tu credencial, debés añadir esta aplicación a la pantalla de inicio de tu iPhone o iPad.
+        </p>
+        
+        <div class="guide-arrow">
+            <div class="guide-step">
+                <span class="icon material-symbols-outlined">ios_share</span>
+                <p>1. Tocá el botón de <strong>Compartir</strong> en la barra de Safari.</p>
+            </div>
+            <div class="guide-step">
+                <span class="icon material-symbols-outlined">add_box</span>
+                <p>2. Seleccioná la opción <strong>"Añadir a pantalla de inicio"</strong>.</p>
+            </div>
+            <div class="guide-step">
+                <span class="icon material-symbols-outlined">apps</span>
+                <p>3. Abrí la aplicación desde el nuevo ícono en tu pantalla principal.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" style="display:none; flex-direction: column; width: 100%; min-height: 100vh;">
+
+        <!-- 1. LOGIN VIEW -->
+        <div id="login-view" class="view">
+            <!-- Top Wave Decoration -->
+            <div class="wave-container">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="wave-svg">
+                    <path d="M0,0 L100,0 L100,60 Q50,105 0,60 Z" />
+                </svg>
+                <div class="logo-circle">
+                    <img src="logo.png" alt="Logo Sindicato"/>
+                </div>
+            </div>
+
+            <!-- Login form -->
+            <div class="login-content">
+                <h1 class="title-h1">Bienvenido</h1>
+                
+                <form id="login-form" onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- DNI input -->
+                    <div class="input-group">
+                        <span class="material-symbols-outlined">login</span>
+                        <input id="login-dni" type="tel" pattern="[0-9]*" class="input-field" placeholder="Ingrese su DNI" required/>
+                    </div>
+
+                    <!-- Name input -->
+                    <div class="input-group">
+                        <span class="material-symbols-outlined">person_outline</span>
+                        <input id="login-name" type="text" class="input-field" placeholder="Nombre y Apellido" required/>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-gold" style="margin-top: 16px;">
+                        <span id="btn-text">Aceptar</span>
+                        <div id="btn-spinner" class="spinner" style="width: 24px; height: 24px; border-width: 2.5px; border-top-color: black; display: none;"></div>
+                    </button>
+                </form>
+
+                <p class="support-text">
+                    ¿Necesita ayuda?<br/>
+                    soporte@obrasocial.com.ar
+                </p>
+            </div>
+        </div>
+
+        <!-- 2. DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view">
+            <header class="app-bar">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield</span>
+                    <span class="app-bar-title">Credencial Digital</span>
+                </div>
+                <button onclick="showLogoutDialog()" class="app-bar-action">
+                    <span class="material-symbols-outlined">logout</span>
+                </button>
+            </header>
+
+            <div class="dashboard-content">
+                <!-- Welcome card -->
+                <div class="welcome-card">
+                    <div class="avatar-circle">
+                        <span class="material-symbols-outlined">person</span>
+                    </div>
+                    <div class="user-details">
+                        <h3 id="dash-username">Afiliado</h3>
+                        <p id="dash-userdni">DNI: -</p>
+                        <p id="dash-useraffiliate">N° Afiliado: -</p>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Servicios</h3>
+
+                <!-- Menu Items -->
+                <!-- Service 1: Credencial -->
+                <div class="menu-card" onclick="navigateTo('credential-view')">
+                    <div class="menu-card-left">
+                        <div class="menu-card-icon" style="background: rgba(21, 101, 192, 0.15); color: var(--wav-blue);">
+                            <span class="material-symbols-outlined">badge</span>
+                        </div>
+                        <div class="menu-card-info">
+                            <h4>Credencial Digital</h4>
+                            <p>Visualizar su credencial nativa</p>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined" style="color: #64748B;">chevron_right</span>
+                </div>
+
+                <!-- Service 2: News -->
+                <div class="menu-card" onclick="navigateTo('news-view')">
+                    <div class="menu-card-left">
+                        <div class="menu-card-icon" style="background: rgba(245, 124, 0, 0.15); color: #F57C00;">
+                            <span class="material-symbols-outlined">newspaper</span>
+                        </div>
+                        <div class="menu-card-info">
+                            <h4>Novedades y Anuncios</h4>
+                            <p>Últimas noticias y comunicaciones</p>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined" style="color: #64748B;">chevron_right</span>
+                </div>
+
+                <!-- Service 3: Settings -->
+                <div class="menu-card" onclick="openSupportModal()">
+                    <div class="menu-card-left">
+                        <div class="menu-card-icon" style="background: rgba(94, 53, 177, 0.15); color: #5E35B1;">
+                            <span class="material-symbols-outlined">settings</span>
+                        </div>
+                        <div class="menu-card-info">
+                            <h4>Configuración</h4>
+                            <p>Ajustes e información de soporte</p>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined" style="color: #64748B;">chevron_right</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CREDENTIAL VIEW (IFRAME) -->
+        <div id="credential-view" class="view">
+            <header class="webview-header">
+                <button onclick="navigateTo('dashboard-view')" class="back-btn">
+                    <span class="material-symbols-outlined">arrow_back_ios</span>
+                    Atrás
+                </button>
+            </header>
+            <div class="webview-container">
+                <div id="credential-loader" class="loading-screen">
+                    <div class="spinner"></div>
+                </div>
+                <iframe id="credential-iframe" class="webview-iframe" src="about:blank"></iframe>
+            </div>
+        </div>
+
+        <!-- 4. NEWS VIEW (IFRAME) -->
+        <div id="news-view" class="view">
+            <header class="webview-header">
+                <button onclick="handleNewsBack()" class="back-btn">
+                    <span class="material-symbols-outlined">arrow_back_ios</span>
+                    Atrás
+                </button>
+            </header>
+            <div class="webview-container">
+                <div id="news-loader" class="loading-screen">
+                    <div class="spinner"></div>
+                </div>
+                <iframe id="news-iframe" class="webview-iframe" src="about:blank"></iframe>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ERROR SNACKBAR -->
+    <div id="error-snackbar" class="snackbar">
+        <span class="material-symbols-outlined">error</span>
+        <span id="snackbar-message">Error de autenticación.</span>
+    </div>
+
+    <!-- SUPPORT / CONFIG MODAL -->
+    <div id="support-modal" class="modal" onclick="closeSupportModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Configuración y Soporte</h3>
+                <button onclick="closeSupportModal(event)" class="modal-close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="contact-list">
+                <!-- Email -->
+                <div class="contact-item">
+                    <span class="icon material-symbols-outlined">mail</span>
+                    <div class="contact-details">
+                        <h5>Correo electrónico</h5>
+                        <p>soporte@obrasocial.com.ar</p>
+                    </div>
+                </div>
+                <!-- Phone -->
+                <div class="contact-item">
+                    <span class="icon material-symbols-outlined">phone</span>
+                    <div class="contact-details">
+                        <h5>Línea de Atención</h5>
+                        <p>0800-555-1234</p>
+                    </div>
+                </div>
+                <!-- Version info -->
+                <div class="contact-item">
+                    <span class="icon material-symbols-outlined">info</span>
+                    <div class="contact-details">
+                        <h5>Versión Web App</h5>
+                        <p>1.0.0 (iOS Standalone)</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="showLogoutDialog(); closeSupportModal(event);" class="btn-gold" style="background-color: #EF4444; color: white; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGOUT CONFIRMATION DIALOG -->
+    <div id="logout-dialog" class="dialog-overlay">
+        <div class="dialog-card">
+            <h4>Cerrar sesión</h4>
+            <p>¿Está seguro que desea salir de su cuenta?</p>
+            <div class="dialog-actions">
+                <button onclick="closeLogoutDialog()" class="dialog-btn cancel">Cancelar</button>
+                <button onclick="confirmLogout()" class="dialog-btn confirm">Salir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Project Constants
+        const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbzwlmFPZRNYVtnGzGegkwC6ozoyDu9OEc0kauSa-kCGUMuZieU9vN8k86l9NemhJsCZ/exec';
+        const CREDENTIAL_BASE_URL = 'https://sindicarnecolon.github.io/gestion-credenciales/';
+        const NEWS_URL = 'https://sites.google.com/view/sindicatodelacarnecolon/p%C3%A1gina-principal';
+
+        let currentUser = null;
+
+        // 1. Device Detections
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function isStandalone() {
+            return ('standalone' in window.navigator) && window.navigator.standalone;
+        }
+
+        // Initialize App flow
+        window.addEventListener('DOMContentLoaded', () => {
+            // First: OS validation
+            if (!isIOS()) {
+                document.getElementById('os-restrict-screen').style.display = 'flex';
+                return;
+            }
+
+            // Second: PWA Standalone Mode validation
+            if (!isStandalone()) {
+                document.getElementById('pwa-guide-screen').style.display = 'flex';
+                return;
+            }
+
+            // iOS & Standalone confirmed -> Start app
+            document.getElementById('app-container').style.display = 'flex';
+            checkSession();
+            setupIFrameHandlers();
+        });
+
+        // 2. Navigation
+        function navigateTo(viewId) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+            // Show target view
+            const targetView = document.getElementById(viewId);
+            targetView.classList.add('active');
+
+            // View-specific initializations
+            if (viewId === 'credential-view') {
+                loadCredentialIFrame();
+            } else if (viewId === 'news-view') {
+                loadNewsIFrame();
+            }
+        }
+
+        // Setup session checks
+        function checkSession() {
+            const stored = localStorage.getItem('user_session');
+            if (stored) {
+                try {
+                    currentUser = JSON.parse(stored);
+                    populateDashboard();
+                    navigateTo('dashboard-view');
+                } catch(e) {
+                    localStorage.removeItem('user_session');
+                    navigateTo('login-view');
+                }
+            } else {
+                navigateTo('login-view');
+            }
+        }
+
+        function populateDashboard() {
+            document.getElementById('dash-username').textContent = currentUser.fullName;
+            document.getElementById('dash-userdni').textContent = `DNI: ${currentUser.dni}`;
+            document.getElementById('dash-useraffiliate').textContent = `N° Afiliado: ${currentUser.affiliateNumber}`;
+        }
+
+        // 3. Login Action
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const dni = document.getElementById('login-dni').value.trim();
+            const name = document.getElementById('login-name').value.trim();
+
+            if (!dni || !name) {
+                showSnackbar('Por favor ingrese el DNI y el Nombre completo.');
+                return;
+            }
+
+            // Show loader
+            document.getElementById('btn-text').style.display = 'none';
+            document.getElementById('btn-spinner').style.display = 'block';
+
+            try {
+                const url = `${LOGIN_API_URL}?dni=${encodeURIComponent(dni)}&nombre=${encodeURIComponent(name)}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error de servidor (${response.status})`);
+                }
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = {
+                        dni: dni,
+                        fullName: data.nombre || name,
+                        affiliateNumber: data.nroAfiliado || '',
+                        establishment: data.establecimiento || '',
+                        vtoRaw: data.vto || '',
+                        isExpired: data.success ? false : true // managed by client verification
+                    };
+                    
+                    localStorage.setItem('user_session', JSON.stringify(currentUser));
+                    populateDashboard();
+                    navigateTo('dashboard-view');
+                } else {
+                    showSnackbar(data.message || 'DNI o Nombre y Apellido incorrectos.');
+                }
+            } catch(error) {
+                showSnackbar('Error de conexión. Intente nuevamente.');
+                console.error(error);
+            } finally {
+                // Hide loader
+                document.getElementById('btn-text').style.display = 'block';
+                document.getElementById('btn-spinner').style.display = 'none';
+            }
+        }
+
+        // 4. Load WebViews inside IFrames
+        function loadCredentialIFrame() {
+            if (!currentUser) return;
+            
+            document.getElementById('credential-loader').style.display = 'flex';
+            const iframe = document.getElementById('credential-iframe');
+
+            // Build query params
+            const params = new URLSearchParams({
+                dni: currentUser.dni,
+                nombre: currentUser.fullName,
+                nro: currentUser.affiliateNumber,
+                estab: currentUser.establishment,
+                vto: currentUser.vtoRaw,
+                status: 'activo'
+            });
+
+            const targetUrl = `${CREDENTIAL_BASE_URL}?${params.toString()}`;
+            iframe.src = targetUrl;
+        }
+
+        function loadNewsIFrame() {
+            document.getElementById('news-loader').style.display = 'flex';
+            const iframe = document.getElementById('news-iframe');
+            if (iframe.src === 'about:blank' || iframe.src === '') {
+                iframe.src = NEWS_URL;
+            } else {
+                document.getElementById('news-loader').style.display = 'none';
+            }
+        }
+
+        function setupIFrameHandlers() {
+            // Loader hides
+            document.getElementById('credential-iframe').addEventListener('load', () => {
+                document.getElementById('credential-loader').style.display = 'none';
+                injectIframeJSBridge();
+            });
+
+            document.getElementById('news-iframe').addEventListener('load', () => {
+                document.getElementById('news-loader').style.display = 'none';
+            });
+        }
+
+        // Javascript Bridge for the Credential Iframe (Same-Origin makes this possible)
+        function injectIframeJSBridge() {
+            const iframe = document.getElementById('credential-iframe');
+            try {
+                // Inject the FlutterChannel into the same-origin iframe's window
+                iframe.contentWindow.FlutterChannel = {
+                    postMessage: function(action) {
+                        handleIframeMessage(action);
+                    }
+                };
+            } catch (err) {
+                console.warn("Could not inject bridge, likely cross-origin loading:", err);
+            }
+        }
+
+        function handleIframeMessage(action) {
+            if (action === 'logout') {
+                showLogoutDialog();
+            } else if (action === 'news') {
+                navigateTo('news-view');
+            } else if (action === 'credential') {
+                // reload current credential frame
+                loadCredentialIFrame();
+            }
+        }
+
+        // Support for Back navigation inside News Site (Google Sites)
+        function handleNewsBack() {
+            const iframe = document.getElementById('news-iframe');
+            try {
+                if (iframe.contentWindow.history.length > 1) {
+                    iframe.contentWindow.history.back();
+                } else {
+                    navigateTo('dashboard-view');
+                }
+            } catch(e) {
+                // cross-origin security fallback
+                navigateTo('dashboard-view');
+            }
+        }
+
+        // 5. Modals and Dialogs
+        function openSupportModal() {
+            document.getElementById('support-modal').classList.add('open');
+        }
+
+        function closeSupportModal(e) {
+            document.getElementById('support-modal').classList.remove('open');
+        }
+
+        function showLogoutDialog() {
+            document.getElementById('logout-dialog').classList.add('open');
+        }
+
+        function closeLogoutDialog() {
+            document.getElementById('logout-dialog').classList.remove('open');
+        }
+
+        function confirmLogout() {
+            localStorage.removeItem('user_session');
+            currentUser = null;
+            closeLogoutDialog();
+            
+            // Clean iframe views
+            document.getElementById('credential-iframe').src = 'about:blank';
+            
+            navigateTo('login-view');
+        }
+
+        // 6. Alert Snackbar
+        let snackbarTimeout;
+        function showSnackbar(msg) {
+            const sb = document.getElementById('error-snackbar');
+            document.getElementById('snackbar-message').textContent = msg;
+            sb.classList.add('show');
+            
+            clearTimeout(snackbarTimeout);
+            snackbarTimeout = setTimeout(() => {
+                sb.classList.remove('show');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>

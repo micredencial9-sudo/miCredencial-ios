@@ -1,0 +1,22 @@
+{
+  "name": "Sindicato de la Carne - Credencial Digital",
+  "short_name": "Sindicato Carne",
+  "description": "Credencial Digital de Afiliados y Novedades del Sindicato de la Carne",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0D1B2A",
+  "theme_color": "#0D1B2A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
