@@ -810,10 +810,12 @@
                 </div>
 
                 <!-- Service 2: News -->
-                <div class="menu-card" onclick="navigateTo('news-view')">
+                <div class="menu-card" onclick="navigateTo('news-view')" style="position:relative;">
                     <div class="menu-card-left">
-                        <div class="menu-card-icon" style="background: rgba(245, 124, 0, 0.15); color: #F57C00;">
+                        <div class="menu-card-icon" style="background: rgba(245, 124, 0, 0.15); color: #F57C00; position:relative;">
                             <span class="material-symbols-outlined">newspaper</span>
+                            <!-- Badge punto rojo de novedad -->
+                            <span id="news-badge" style="display:none; position:absolute; top:2px; right:2px; width:10px; height:10px; background:#E53935; border-radius:50%; border:2px solid #fff;"></span>
                         </div>
                         <div class="menu-card-info">
                             <h4>Novedades y Anuncios</h4>
@@ -939,6 +941,7 @@
         const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbw5hL-QxkZiAt8G05pEDcpvKzQBOXCcuT2ZVE_PYkz9G1ZvwJ5-edoOQGjK99Z0F-3z2A/exec';
         const CREDENTIAL_BASE_URL = 'https://micredencial9-sudo.github.io/miCredencial/';
         const NEWS_URL = 'https://sites.google.com/view/sindicatodelacarnecolon/p%C3%A1gina-principal'; // TODO: reemplazar con nueva URL de Google Sites
+        const NOTIFICATION_API_URL = 'https://script.google.com/macros/s/AKfycbxYrRYlgq6lMaY85_J4vqrSSXoov2xC9cLHI8uy_70CgWKfC5MWfE3D4ysHHEKddqZABw/exec';
 
         let currentUser = null;
 
@@ -970,6 +973,7 @@
             document.getElementById('app-container').style.display = 'flex';
             checkSession();
             setupIFrameHandlers();
+            checkNotificationBadge(); // Consultar novedades al iniciar
         });
 
         // 2. Navigation
@@ -987,8 +991,35 @@
                 loadCredentialIFrame();
             } else if (viewId === 'news-view') {
                 loadNewsIFrame();
+                // Al entrar a Novedades: ocultar el badge y guardar el ID leído
+                const currentId = localStorage.getItem('notification_current_id');
+                if (currentId) {
+                    localStorage.setItem('notification_last_read_id', currentId);
+                }
+                document.getElementById('news-badge').style.display = 'none';
             }
         }
+
+        // 3. Notification Badge
+        async function checkNotificationBadge() {
+            try {
+                const resp = await fetch(`${NOTIFICATION_API_URL}?action=status`, { cache: 'no-store' });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.enabled) return;
+
+                const currentId = String(data.notificationId);
+                const lastReadId = localStorage.getItem('notification_last_read_id');
+                localStorage.setItem('notification_current_id', currentId);
+
+                if (currentId !== lastReadId) {
+                    document.getElementById('news-badge').style.display = 'block';
+                }
+            } catch (_) {
+                // Si falla la red, no hacer nada
+            }
+        }
+
 
         // Setup session checks
         function checkSession() {
