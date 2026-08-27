@@ -194,11 +194,70 @@
         </a>
     </nav>
 </div>
+<!-- ════ OS RESTRICTION OVERLAY ════ -->
+<div id="os-restrict-screen" class="fixed inset-0 bg-[#0D1B2A] z-[9999] hidden flex-col items-center justify-center p-8 text-center text-white">
+    <div class="w-20 h-20 rounded-full bg-blue-600/20 border-2 border-blue-600 flex items-center justify-center mb-6 animate-pulse">
+        <span class="material-symbols-outlined text-4xl text-blue-500">desktop_mac</span>
+    </div>
+    <div class="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+        <h2 class="text-2xl font-bold mb-4 font-['Outfit']">Solo disponible para iOS</h2>
+        <p class="text-gray-300 text-sm mb-6 leading-relaxed">
+            Esta versión web de la credencial está diseñada exclusivamente para dispositivos Apple (iPhone/iPad).
+        </p>
+        <p class="text-xs text-gray-500">
+            Si utilizas Android, por favor descarga la aplicación oficial desde la Play Store.
+        </p>
+    </div>
+</div>
+
+<!-- ════ PWA INSTALL GUIDE OVERLAY ════ -->
+<div id="pwa-guide-screen" onclick="this.classList.add('hidden'); this.classList.remove('flex');" class="fixed inset-0 bg-[#0D1B2A]/90 z-[9998] hidden flex-col justify-end cursor-pointer">
+    <!-- Tooltip Card -->
+    <div class="bg-[#f2f4f7] rounded-3xl mx-4 mb-10 p-6 shadow-2xl relative cursor-default" onclick="event.stopPropagation();">
+        <div class="flex items-start gap-4 mb-5">
+            <span class="material-symbols-outlined text-blue-600 shrink-0">ios_share</span>
+            <p class="text-sm text-gray-800 font-medium">1. Tocá el botón de <strong>Compartir</strong> en la barra de Safari.</p>
+        </div>
+        <div class="flex items-start gap-4 mb-5">
+            <span class="material-symbols-outlined text-blue-600 shrink-0">add_box</span>
+            <p class="text-sm text-gray-800 font-medium">2. Seleccioná la opción <strong>"Añadir a pantalla de inicio"</strong>.</p>
+        </div>
+        <div class="flex items-start gap-4">
+            <span class="material-symbols-outlined text-blue-600 shrink-0">apps</span>
+            <p class="text-sm text-gray-800 font-medium">3. Abrí la aplicación desde el nuevo ícono en tu pantalla principal.</p>
+        </div>
+        <!-- Flecha hacia abajo -->
+        <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[#f2f4f7]"></div>
+    </div>
+</div>
 
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbw5hL-QxkZiAt8G05pEDcpvKzQBOXCcuT2ZVE_PYkz9G1ZvwJ5-edoOQGjK99Z0F-3z2A/exec';
 
+    function isIOS() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalone() {
+        return ('standalone' in window.navigator) && window.navigator.standalone;
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+        // 1. Validar que sea un dispositivo iOS (Bloquear Windows/Android)
+        if (!isIOS()) {
+            document.getElementById('os-restrict-screen').classList.remove('hidden');
+            document.getElementById('os-restrict-screen').classList.add('flex');
+            return;
+        }
+
+        // 2. Validar que esté instalada como App (PWA)
+        if (!isStandalone()) {
+            document.getElementById('pwa-guide-screen').classList.remove('hidden');
+            document.getElementById('pwa-guide-screen').classList.add('flex');
+            // No hacemos return aquí para que puedan seguir logueándose si cierran el cartel
+        }
+
         const saved = localStorage.getItem('userSession');
         if (saved) {
             try {
