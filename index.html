@@ -178,9 +178,10 @@
             </button>
             
             <!-- Novedades -->
-            <button onclick="window.open('https://sites.google.com/view/sindicatodelacarnecolon/p%C3%A1gina-principal', '_blank')" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
-                <div class="bg-[#fceadc] text-[#d97736] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+            <button onclick="goNewsWeb()" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
+                <div class="bg-[#fceadc] text-[#d97736] w-12 h-12 rounded-xl flex items-center justify-center shrink-0 relative">
                     <span class="material-symbols-outlined">newspaper</span>
+                    <span id="news-badge" class="hidden absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-600 border-2 border-white rounded-full"></span>
                 </div>
                 <div class="flex-1">
                     <h3 class="font-bold text-gray-800">Novedades y Anuncios</h3>
@@ -190,7 +191,7 @@
             </button>
             
             <!-- Configuración -->
-            <button class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
+            <button onclick="showScreen('screen-settings')" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
                 <div class="bg-[#eee6fa] text-[#6b3fa0] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined">settings</span>
                 </div>
@@ -219,6 +220,63 @@
             <div id="qrcode-container" class="bg-white p-4 rounded-xl border border-gray-200 mb-6 flex justify-center items-center aspect-square w-full max-w-[250px]"></div>
             <p id="qr-name" class="font-bold text-xl text-center text-gray-800"></p>
             <p id="qr-dni" class="text-gray-500 text-center"></p>
+        </div>
+    </main>
+</div>
+
+<!-- ════ PANTALLA CONFIGURACIÓN ════ -->
+<div id="screen-settings" class="screen flex-col min-h-screen bg-background">
+    <header class="fixed top-0 w-full z-50 flex items-center px-4 h-16 bg-[#252a85] text-white shadow-md">
+        <button onclick="showScreen('screen-home')" class="p-2 -ml-2 rounded-full hover:bg-white/10">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="text-lg font-bold ml-2">Configuración</span>
+    </header>
+
+    <main class="flex-grow pt-24 pb-10 px-5 max-w-md mx-auto w-full">
+        <!-- Info App -->
+        <h3 class="text-[#38398a] font-bold text-sm ml-2 mb-2 uppercase">Información de la App</h3>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+            <div class="p-4 flex items-center gap-4 border-b border-gray-100">
+                <span class="material-symbols-outlined text-gray-400">info</span>
+                <div>
+                    <p class="font-bold text-gray-800">Aplicación</p>
+                    <p class="text-gray-500 text-sm">Mi Credencial Digital</p>
+                </div>
+            </div>
+            <div class="p-4 flex items-center gap-4 border-b border-gray-100">
+                <span class="material-symbols-outlined text-gray-400">business</span>
+                <div>
+                    <p class="font-bold text-gray-800">Institución</p>
+                    <p class="text-gray-500 text-sm">O.S.F.G.P.I.CyD</p>
+                </div>
+            </div>
+            <div class="p-4 flex items-center gap-4">
+                <span class="material-symbols-outlined text-gray-400">verified</span>
+                <div>
+                    <p class="font-bold text-gray-800">Versión</p>
+                    <p class="text-gray-500 text-sm">1.0.0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Soporte -->
+        <h3 class="text-[#38398a] font-bold text-sm ml-2 mb-2 uppercase">Contacto y Soporte</h3>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 flex items-center gap-4 border-b border-gray-100">
+                <span class="material-symbols-outlined text-gray-400">email</span>
+                <div>
+                    <p class="font-bold text-gray-800">Correo de Soporte</p>
+                    <p class="text-gray-500 text-sm">sindicatodelacarnecolon@gmail.com</p>
+                </div>
+            </div>
+            <div class="p-4 flex items-center gap-4">
+                <span class="material-symbols-outlined text-gray-400">phone</span>
+                <div>
+                    <p class="font-bold text-gray-800">Teléfono</p>
+                    <p class="text-gray-500 text-sm">3473-421111</p>
+                </div>
+            </div>
         </div>
     </main>
 </div>
@@ -328,6 +386,7 @@
 
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbw5hL-QxkZiAt8G05pEDcpvKzQBOXCcuT2ZVE_PYkz9G1ZvwJ5-edoOQGjK99Z0F-3z2A/exec';
+    const NOTIF_API = 'https://script.google.com/macros/s/AKfycbzMHPDQs7kaEsqj4P31TdV3M7Lch_dWinS1CfiQVytNtvDfnCEwerYQPmASRwzU8qaqUA/exec';
 
     function isIOS() {
         return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
@@ -362,6 +421,8 @@
                 localStorage.removeItem('userSession');
             }
         }
+        
+        checkNewsBadge();
     });
 
     async function doLogin() {
@@ -458,6 +519,29 @@
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+    }
+
+    async function checkNewsBadge() {
+        try {
+            const resp = await fetch(`${NOTIF_API}?action=status`);
+            const data = await resp.json();
+            if (data.success && data.enabled) {
+                const lastRead = localStorage.getItem('lastReadNewsId');
+                if (String(data.notificationId) !== String(lastRead)) {
+                    document.getElementById('news-badge').classList.remove('hidden');
+                }
+            }
+        } catch(e) {}
+    }
+
+    function goNewsWeb() {
+        document.getElementById('news-badge').classList.add('hidden');
+        fetch(`${NOTIF_API}?action=status`).then(r=>r.json()).then(data=>{
+            if (data.success && data.enabled) {
+                localStorage.setItem('lastReadNewsId', String(data.notificationId));
+            }
+        }).catch(()=>{});
+        window.open('https://sites.google.com/view/sindicatodelacarnecolon/p%C3%A1gina-principal', '_blank');
     }
 </script>
 </body>
