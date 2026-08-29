@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script id="tailwind-config">
         try {
             tailwind.config = {
@@ -127,16 +128,110 @@
     </div>
 </div>
 
+<!-- ════ PANTALLA DE INICIO (DASHBOARD) ════ -->
+<div id="screen-home" class="screen flex-col min-h-screen bg-white">
+    <header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#252a85] text-white shadow-md">
+        <span class="text-lg font-bold">Mi credencial Digital</span>
+        <button onclick="doLogout()" class="p-2 -mr-2">
+            <span class="material-symbols-outlined">logout</span>
+        </button>
+    </header>
+    
+    <main class="flex-grow pt-24 px-5 pb-10">
+        <!-- User Card -->
+        <div class="bg-gray-100 rounded-2xl p-5 flex items-center gap-4 mb-8 shadow-sm">
+            <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-primary shrink-0">
+                <span class="material-symbols-outlined text-3xl">person</span>
+            </div>
+            <div class="overflow-hidden">
+                <p id="home-name" class="font-bold text-gray-800 text-lg truncate">...</p>
+                <p class="text-gray-500 text-sm mt-0.5">DNI: <span id="home-dni">...</span></p>
+                <p class="text-gray-500 text-sm">N° Afiliado: <span id="home-nro">...</span></p>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Servicios</h2>
+        
+        <div class="flex flex-col gap-3">
+            <!-- Credencial Button -->
+            <button onclick="showScreen('screen-credential')" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
+                <div class="bg-[#e4e7fa] text-[#4a55a2] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined">badge</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800">Credencial Digital</h3>
+                    <p class="text-gray-500 text-sm mt-0.5">Visualizar su credencial nativa</p>
+                </div>
+                <span class="material-symbols-outlined text-gray-400">chevron_right</span>
+            </button>
+            
+            <!-- QR Button -->
+            <button onclick="openQR()" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
+                <div class="bg-[#dcf3f8] text-[#0089a7] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined">qr_code_2</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800">Código QR de credencial digital</h3>
+                    <p class="text-gray-500 text-sm mt-0.5">Generar código para validación</p>
+                </div>
+                <span class="material-symbols-outlined text-gray-400">chevron_right</span>
+            </button>
+            
+            <!-- Novedades -->
+            <button onclick="window.open('https://sites.google.com/view/sindicatodelacarnecolon/p%C3%A1gina-principal', '_blank')" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
+                <div class="bg-[#fceadc] text-[#d97736] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined">newspaper</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800">Novedades y Anuncios</h3>
+                    <p class="text-gray-500 text-sm mt-0.5">Últimas noticias y comunicaciones</p>
+                </div>
+                <span class="material-symbols-outlined text-gray-400">chevron_right</span>
+            </button>
+            
+            <!-- Configuración -->
+            <button class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm active:bg-gray-200 text-left border border-gray-200">
+                <div class="bg-[#eee6fa] text-[#6b3fa0] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined">settings</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800">Configuración</h3>
+                    <p class="text-gray-500 text-sm mt-0.5">Ajustes e información de soporte</p>
+                </div>
+                <span class="material-symbols-outlined text-gray-400">chevron_right</span>
+            </button>
+        </div>
+    </main>
+</div>
+
+<!-- ════ PANTALLA QR ════ -->
+<div id="screen-qr" class="screen flex-col min-h-screen bg-white">
+    <header class="fixed top-0 w-full z-50 flex items-center px-4 h-16 bg-[#252a85] text-white shadow-md">
+        <button onclick="showScreen('screen-home')" class="p-2 -ml-2 rounded-full hover:bg-white/10">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="text-lg font-bold ml-2">Código QR</span>
+    </header>
+
+    <main class="flex-grow pt-24 pb-10 px-6 flex flex-col items-center">
+        <div class="w-full bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center border border-gray-100">
+            <p class="text-center text-gray-500 text-sm mb-6">Muestre este código para validar su identidad como afiliado.</p>
+            <div id="qrcode-container" class="bg-white p-4 rounded-xl border border-gray-200 mb-6 flex justify-center items-center aspect-square w-full max-w-[250px]"></div>
+            <p id="qr-name" class="font-bold text-xl text-center text-gray-800"></p>
+            <p id="qr-dni" class="text-gray-500 text-center"></p>
+        </div>
+    </main>
+</div>
+
 <!-- ════ PANTALLA DE CREDENCIAL ════ -->
 <div id="screen-credential" class="screen flex-col min-h-screen">
-    <header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-surface/90 backdrop-blur-sm border-b border-outline-variant">
-        <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">shield</span>
-            <span class="text-xl font-bold text-primary">Mi Credencial Digital</span>
+    <header class="fixed top-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-surface/90 backdrop-blur-sm border-b border-outline-variant">
+        <div class="flex items-center gap-1">
+            <button onclick="showScreen('screen-home')" class="p-2 rounded-full hover:bg-surface-container">
+                <span class="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+            </button>
+            <span class="text-xl font-bold text-primary ml-1">Mi Credencial Digital</span>
         </div>
-        <button onclick="doLogout()" class="p-2 rounded-full hover:bg-surface-container">
-            <span class="material-symbols-outlined text-on-surface-variant">logout</span>
-        </button>
     </header>
 
     <main class="flex-grow pt-20 pb-32">
@@ -262,7 +357,7 @@
         if (saved) {
             try {
                 populateCredential(JSON.parse(saved));
-                showScreen('screen-credential');
+                showScreen('screen-home');
             } catch(e) {
                 localStorage.removeItem('userSession');
             }
@@ -294,7 +389,7 @@
             if (data.success) {
                 localStorage.setItem('userSession', JSON.stringify(data));
                 populateCredential(data);
-                showScreen('screen-credential');
+                showScreen('screen-home');
             } else {
                 errEl.textContent = data.message || 'Datos incorrectos.';
                 errEl.classList.remove('hidden');
@@ -309,11 +404,47 @@
     }
 
     function populateCredential(data) {
+        // Para la credencial
         document.getElementById('user-name').textContent  = data.nombre  || '-';
         document.getElementById('user-dni').textContent   = data.dni     || '-';
         document.getElementById('user-nro').textContent   = data.nroAfiliado || '-';
         document.getElementById('user-estab').textContent = data.establecimiento || '-';
         if (data.vto) document.getElementById('user-vto').textContent = 'Vto: ' + data.vto;
+        
+        // Para el Dashboard (Home)
+        document.getElementById('home-name').textContent = data.nombre || '-';
+        document.getElementById('home-dni').textContent  = data.dni || '-';
+        document.getElementById('home-nro').textContent  = data.nroAfiliado || '-';
+    }
+    
+    function openQR() {
+        const saved = localStorage.getItem('userSession');
+        if (saved) {
+            const data = JSON.parse(saved);
+            
+            const qrPayload = JSON.stringify({
+                dni: data.dni,
+                nombre: data.nombre,
+                nroAfiliado: data.nroAfiliado,
+                estado: data.estado || 'ACTIVO',
+                vto: data.vto || '',
+                establecimiento: data.establecimiento || ''
+            });
+
+            document.getElementById('qrcode-container').innerHTML = ''; // clear previous
+            new QRCode(document.getElementById('qrcode-container'), {
+                text: qrPayload,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+
+            document.getElementById('qr-name').textContent = data.nombre;
+            document.getElementById('qr-dni').textContent = 'DNI: ' + data.dni;
+            showScreen('screen-qr');
+        }
     }
 
     function doLogout() {
