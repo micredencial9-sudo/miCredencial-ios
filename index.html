@@ -425,32 +425,30 @@
         checkNewsBadge();
     });
 
-    async function fetchWithRetry(url, options = {}, retries = 2, timeoutMs = 25000) {
-        for (let i = 0; i < retries; i++) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                const response = await fetch(url, { ...options, signal: controller.signal });
-                clearTimeout(timer);
-                return await response.json();
-            } catch (err) {
-                clearTimeout(timer);
-                if (i === retries - 1) throw err;
-                // Espera de 1.2s antes de reintentar silenciosamente
-                await new Promise(res => setTimeout(res, 1200));
-            }
+    async function fetchWithTimeout(url, timeoutMs = 8000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timer);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            clearTimeout(timer);
+            throw err;
         }
     }
 
     async function doLogin() {
-        const dni    = document.getElementById('input-dni').value.trim();
-        const nombre = document.getElementById('input-name').value.trim().toUpperCase();
-        const errEl  = document.getElementById('login-error');
-        const btnText = document.getElementById('btn-login-text');
+        const dniInput    = document.getElementById('input-dni').value.trim();
+        const nombreInput = document.getElementById('input-name').value.trim().toUpperCase();
+        const dniClean    = dniInput.replace(/\D/g, '');
+        const errEl       = document.getElementById('login-error');
+        const btnText     = document.getElementById('btn-login-text');
 
         errEl.classList.add('hidden');
 
-        if (!dni || !nombre) {
+        if (!dniClean || !nombreInput) {
             errEl.textContent = 'Ingrese su DNI y Nombre.';
             errEl.classList.remove('hidden');
             return;
@@ -459,25 +457,80 @@
         btnText.textContent = 'Verificando...';
         document.getElementById('btn-login').disabled = true;
 
-        try {
-            const url  = `${API_URL}?dni=${encodeURIComponent(dni)}&nombre=${encodeURIComponent(nombre)}`;
-            const data = await fetchWithRetry(url);
+        const CACHE_KEY = 'affiliates_local_cache';
+        const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 horas
 
-            if (data.success) {
-                localStorage.setItem('userSession', JSON.stringify(data));
-                populateCredential(data);
-                showScreen('screen-home');
-            } else {
-                errEl.textContent = data.message || 'Datos incorrectos.';
-                errEl.classList.remove('hidden');
+        let userFound = null;
+
+        // PASO 1: Intentar conexión Online primero (8 segundos de tiempo límite)
+        try {
+            const getAllUrl = `${API_URL}?action=getAll`;
+            const data = await fetchWithTimeout(getAllUrl, 8000);
+
+            if (data.success && data.afiliados) {
+                // Guardar/Actualizar caché local en el dispositivo (renueva 24 horas)
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    afiliados: data.afiliados
+                }));
+
+                const entry = data.afiliados[dniClean];
+                if (entry) {
+                    const nombreServer = (entry.nombre || '').trim().toUpperCase();
+                    if (nombreServer === nombreInput) {
+                        userFound = entry;
+                    } else {
+                        errEl.textContent = 'DNI o Nombre y Apellido incorrectos.';
+                        errEl.classList.remove('hidden');
+                        btnText.textContent = 'Aceptar';
+                        document.getElementById('btn-login').disabled = false;
+                        return;
+                    }
+                } else {
+                    errEl.textContent = 'DNI o Nombre y Apellido incorrectos.';
+                    errEl.classList.remove('hidden');
+                    btnText.textContent = 'Aceptar';
+                    document.getElementById('btn-login').disabled = false;
+                    return;
+                }
             }
         } catch (err) {
-            errEl.textContent = 'No se pudo conectar con el servidor. Verifique su conexión.';
-            errEl.classList.remove('hidden');
-        } finally {
-            btnText.textContent = 'Aceptar';
-            document.getElementById('btn-login').disabled = false;
+            // Apps Script no respondió a tiempo (8s) o sin conexión → Buscar en caché local
         }
+
+        // PASO 2: Si la conexión online falló, validar con el caché local del navegador
+        if (!userFound) {
+            const localRaw = localStorage.getItem(CACHE_KEY);
+            if (localRaw) {
+                try {
+                    const cacheObj = JSON.parse(localRaw);
+                    const age = Date.now() - (cacheObj.timestamp || 0);
+
+                    if (age < MAX_AGE_MS && cacheObj.afiliados) {
+                        const entry = cacheObj.afiliados[dniClean];
+                        if (entry) {
+                            const nombreLocal = (entry.nombre || '').trim().toUpperCase();
+                            if (nombreLocal === nombreInput) {
+                                userFound = entry;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // RESULTADO FINAL
+        if (userFound) {
+            localStorage.setItem('userSession', JSON.stringify(userFound));
+            populateCredential(userFound);
+            showScreen('screen-home');
+        } else {
+            errEl.textContent = 'No se pudo conectar con el servidor y no hay datos locales recientes. Verifique su conexión.';
+            errEl.classList.remove('hidden');
+        }
+
+        btnText.textContent = 'Aceptar';
+        document.getElementById('btn-login').disabled = false;
     }
 
     function populateCredential(data) {
